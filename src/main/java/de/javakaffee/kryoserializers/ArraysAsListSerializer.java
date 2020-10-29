@@ -37,17 +37,6 @@ import java.util.List;
  */
 public class ArraysAsListSerializer extends Serializer<List<?>> {
 
-    private Field _arrayField;
-
-    public ArraysAsListSerializer() {
-        try {
-            _arrayField = Class.forName( "java.util.Arrays$ArrayList" ).getDeclaredField( "a" );
-            _arrayField.setAccessible( true );
-        } catch ( final Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     @Override
     public List<?> read(final Kryo kryo, final Input input, final Class<? extends List<?>> type) {
         final int length = input.readInt(true);
@@ -69,7 +58,7 @@ public class ArraysAsListSerializer extends Serializer<List<?>> {
     @Override
     public void write(final Kryo kryo, final Output output, final List<?> obj) {
         try {
-            final Object[] array = (Object[]) _arrayField.get( obj );
+            final Object[] array = obj.toArray();
             output.writeInt(array.length, true);
             final Class<?> componentType = array.getClass().getComponentType();
             kryo.writeClass( output, componentType );
@@ -88,7 +77,7 @@ public class ArraysAsListSerializer extends Serializer<List<?>> {
     @Override
     public List<?> copy(Kryo kryo, List<?> original) {
         try {
-            final Object[] array = (Object[]) _arrayField.get(original);
+            final Object[] array = original.toArray();
             kryo.reference(array);
             Object[] arrayCopy = kryo.copy(array);
             return Arrays.asList(arrayCopy);
